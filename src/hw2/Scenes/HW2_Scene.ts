@@ -476,7 +476,14 @@ export default class Homework1_Scene extends Scene {
 				// If the asteroid is spawned in and it overlaps the player
 				if(asteroid.visible && Homework1_Scene.checkAABBtoCircleCollision(<AABB>this.player.collisionShape, <Circle>asteroid.collisionShape)){
 					// Put your code here:
-
+					asteroid.visible = false;
+					this.numAsteroids -= 1;
+					this.asteroidsLabel.text = `Asteroids: ${this.numAsteroids}`;
+					this.playerShield -= 1;
+					this.playerinvincible = true;
+					this.shieldsLabel.text = `Shield: ${this.playerShield}`;
+					this.emitter.fireEvent(Homework2Event.PLAYER_DAMAGE, {shield: this.playerShield});
+					this.numAsteroidsDestroyed += 1;
 				}
 			}
 		}
@@ -525,6 +532,10 @@ export default class Homework1_Scene extends Scene {
 			// Update the UI
 			this.numAsteroids += 1;
 			this.asteroidsLabel.text = `Asteroids: ${this.numAsteroids}`;
+
+			let arr = [Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW, Color.MAGENTA, Color.ORANGE]
+			let random = RandUtils.randInt(0, 5);
+			asteroid.color = arr[random];
 		}
 	}
 
@@ -572,6 +583,18 @@ export default class Homework1_Scene extends Scene {
 	handleScreenWrap(node: GameNode, viewportCenter: Vec2, paddedViewportSize: Vec2): void {
 		// Your code goes here:
 
+		if(node.position.x > viewportCenter.x + (paddedViewportSize.x)/2){
+			node.position.x = -(paddedViewportSize.x)/2 + viewportCenter.x;
+		}
+		if(node.position.y > viewportCenter.y + (paddedViewportSize.y)/2){
+			node.position.y = -paddedViewportSize.y/2 + viewportCenter.y;
+		}
+		if(node.position.x < viewportCenter.x - (paddedViewportSize.x)/2){
+			node.position.x = paddedViewportSize.x/2 + viewportCenter.x;
+		}
+		if(node.position.y < viewportCenter.y - (paddedViewportSize.y)/2){
+			node.position.y = paddedViewportSize.y/2 + viewportCenter.y;
+		}
 	}
 
 	// HOMEWORK 2 - TODO
@@ -600,8 +623,19 @@ export default class Homework1_Scene extends Scene {
 	 * @returns True if the two shapes overlap, false if they do not
 	 */
 	static checkAABBtoCircleCollision(aabb: AABB, circle: Circle): boolean {
+
 		// Your code goes here:
-		return false;
+		let closestPoint = new Vec2(0, 0);
+		let rightMostEdgeX = aabb.center.x + aabb.halfSize.x;
+		let leftMostEdgeX = aabb.center.x - aabb.halfSize.x;
+		let topMostEdgeY = aabb.center.y + aabb.halfSize.y;
+		let bottomMostEdgeY = aabb.center.y - aabb.halfSize.y;
+
+		// Find the closest point on the AABB to the circle by clamping the circle's center to the AABB
+		closestPoint.x = Math.max(leftMostEdgeX, Math.min(circle.center.x, rightMostEdgeX));
+		closestPoint.y = Math.max(bottomMostEdgeY, Math.min(circle.center.y, topMostEdgeY));
+		let distance = circle.center.distanceTo(closestPoint);
+		return distance < circle.radius;
 	}
 
 }
